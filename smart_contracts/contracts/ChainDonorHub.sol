@@ -92,6 +92,7 @@ contract ChainDonorHub is Ownable {
             claimed: false
         });
 
+        // add donation
         donorDonations[_donor].push(newDonation);
 
         emit DonationCreated(_donor, _amount);
@@ -99,9 +100,13 @@ contract ChainDonorHub is Ownable {
 
     // Approve a donation
     function approveDonation(address _donor, uint256 _index) public onlyMedicalInstitution {
+        // check if donation was not approved yet
         require(!approvedBy[_donor][_index][_msgSender()], "ChainDonorHub: Institution has already approved this donation");
+        
+        // check if donation exists
         require(donorDonations[_donor][_index].amount > 0, "ChainDonorHub: Donation does not exist");
 
+        // increment approvals
         donorDonations[_donor][_index].approvals += 1;
         approvedBy[_donor][_index][_msgSender()] = true;
 
@@ -110,13 +115,17 @@ contract ChainDonorHub is Ownable {
 
     // Claim a reward
     function claimReward(uint256 _index) public onlyDonor {
+        // check if donation was approved by at least 51 of insitutions
         require(donorDonations[_msgSender()][_index].approvals * 2 > totalInstitutions, "ChainDonorHub: Not enough approvals");
+        // check if reward was not claimed yet
         require(!donorDonations[_msgSender()][_index].claimed, "ChainDonorHub: Already claimed");
 
         uint256 amount = donorDonations[_msgSender()][_index].amount;
 
+        // transfer tokens to donor
         token.mint(_msgSender(), amount);
 
+        // mark reward as claimed
         donorDonations[_msgSender()][_index].claimed = true;
 
         emit DonationClaimed(_msgSender(), amount);
