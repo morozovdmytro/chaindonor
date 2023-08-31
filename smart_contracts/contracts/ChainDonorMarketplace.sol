@@ -13,6 +13,7 @@ contract ChainDonorMarketplace is Ownable {
     mapping(address => mapping(address => bool)) public addCharityVotes;
     mapping(address => mapping(address => bool)) public removeCharityVotes;
     uint256 public totalCharities;
+    Item[] public items;
 
     // Structs
 
@@ -23,8 +24,6 @@ contract ChainDonorMarketplace is Ownable {
         bool purchased;
         address purchasedBy;
     }
-
-    Item[] public items;
 
     // Events
 
