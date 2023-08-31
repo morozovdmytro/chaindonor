@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-// Import ERC20 interface
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./BloodToken.sol";
 
@@ -35,6 +33,8 @@ contract ChainDonorHub is Ownable {
     event DonationCreated(address indexed donor, uint256 amount); // Event emitted when a new donation is created
     event DonationApproved(address indexed institution, address indexed donor, uint256 index); // Event emitted when a donation is approved
     event DonationClaimed(address indexed donor, uint256 amount); // Event emitted when a donation is claimed
+    event InstitutionAdded(address institution); // Event emitted when a new institution is added
+    event InstitutionRemoved(address institution); // Event emitted when an institution is removed
 
     // Modifiers
 
@@ -59,12 +59,14 @@ contract ChainDonorHub is Ownable {
     function addMedicalInstitution(address _institution) public onlyOwner {
         medicalInstitutions[_institution] = true;
         totalInstitutions += 1;
+        emit InstitutionAdded(_institution);
     }
 
     // Remove medical institutions
     function removeMedicalInstitution(address _institution) public onlyOwner {
         medicalInstitutions[_institution] = false;
         totalInstitutions -= 1;
+        emit InstitutionRemoved(_institution);
     }
 
     // Register donors

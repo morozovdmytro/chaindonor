@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-// Import ERC20 interface
+// Imports
+
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -17,7 +18,7 @@ contract BloodToken is ERC20, Ownable {
     constructor() ERC20("BloodToken", "BLOOD") {
         
     }
-
+    
     // Modifiers
 
     modifier onlyMinter() {
@@ -42,7 +43,8 @@ contract BloodToken is ERC20, Ownable {
 
     // allow to burn tokens from an address
     function burnFrom(address account, uint256 amount) public {
-        uint256 decreasedAllowance = allowance(account, _msgSender()) - amount;
+        // calculate potential allowance after operation using SafeMath / sub method
+        uint256 decreasedAllowance = allowance(account, _msgSender()).sub(amount);
 
         // Check allowance
         require(decreasedAllowance >= 0, "ERC20: burn amount exceeds allowance");
