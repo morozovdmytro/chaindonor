@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "compile": "hardhat compile",
+    "postcompile": "node copy-artifacts.js"
+  },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.0",
@@ -20,6 +24,8 @@
     "typescript": ">=4.5.0"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^4.9.3"
+    "@openzeppelin/contracts": "^4.9.3",
+    "fs-extra": "^11.1.1",
+    "glob": "^10.3.4"
   }
 }
