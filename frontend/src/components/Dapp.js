@@ -14,10 +14,9 @@ import contractAddress from "../resources/contract-address.json";
 import { NoWalletDetected } from "./NoWalletDetected";
 import { ConnectWallet } from "./ConnectWallet";
 import { Loading } from "./Loading";
-import { Transfer } from "./Transfer";
 import { TransactionErrorMessage } from "./TransactionErrorMessage";
 import { WaitingForTransactionMessage } from "./WaitingForTransactionMessage";
-import { NoTokensMessage } from "./NoTokensMessage";
+import { NewDonorModal } from "./NewDonorModal";
 
 // This is the default id used by the Hardhat Network
 const HARDHAT_NETWORK_ID = '31337';
@@ -36,9 +35,9 @@ const ERROR_CODE_TX_REJECTED_BY_USER = 4001;
 // you how to keep your Dapp and contract's state in sync,  and how to send a
 // transaction.
 export class Dapp extends React.Component {
+
   constructor(props) {
     super(props);
-
     // We store multiple things in Dapp's state.
     // You don't need to follow this pattern, but it's an useful example.
     this.initialState = {
@@ -51,6 +50,7 @@ export class Dapp extends React.Component {
       txBeingSent: undefined,
       transactionError: undefined,
       networkError: undefined,
+      showDonorModal: false
     };
 
     this.state = this.initialState;
@@ -132,29 +132,12 @@ export class Dapp extends React.Component {
 
         <div className="row">
           <div className="col-12">
-            {/*
-              If the user has no tokens, we don't show the Transfer form
-            */}
-            {this.state.balance.eq(0) && (
-              <NoTokensMessage selectedAddress={this.state.selectedAddress} />
-            )}
-
-            {/*
-              This component displays a form that the user can use to send a 
-              transaction and transfer some tokens.
-              The component doesn't have logic, it just calls the transferTokens
-              callback.
-            */}
-            {this.state.balance.gt(0) && (
-              <Transfer
-                transferTokens={(to, amount) =>
-                  this._transferTokens(to, amount)
-                }
-                tokenSymbol={this.state.tokenData.symbol}
-              />
-            )}
+          <button className="btn btn-primary" onClick={this.handleShowDonorModal}>
+            Register Donor
+          </button>
           </div>
         </div>
+        <NewDonorModal show={this.state.showDonorModal} onHide={this.handleDonorModelClose} />
       </div>
     );
   }
@@ -255,7 +238,7 @@ export class Dapp extends React.Component {
   }
 
   async _updateBalance() {
-    const balance = await this._token.balanceOf('0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266');
+    const balance = await this._token.balanceOf(this.state.selectedAddress);
     this.setState({ balance });
   }
 
@@ -359,4 +342,12 @@ export class Dapp extends React.Component {
       this._switchChain();
     }
   }
+
+  handleShowDonorModal = () => {
+    this.setState({ showDonorModal: true });
+  }
+
+  handleDonorModelClose = () => {
+    this.setState({ showDonorModal: false });
+  };
 }
