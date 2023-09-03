@@ -43,16 +43,17 @@ contract BloodToken is ERC20, Ownable {
 
     // allow to burn tokens from an address
     function burnFrom(address account, uint256 amount) public {
-        // calculate potential allowance after operation using SafeMath / sub method
-        uint256 decreasedAllowance = allowance(account, _msgSender()).sub(amount);
+        // Ensure allowance is sufficient before proceeding
+        require(allowance(account, _msgSender()) >= amount, "ERC20: burn amount exceeds allowance");
 
-        // Check allowance
-        require(decreasedAllowance >= 0, "ERC20: burn amount exceeds allowance");
+        // Safely decrease allowance
+        uint256 decreasedAllowance = allowance(account, _msgSender()).sub(amount);  // .sub() will revert if allowance < amount
 
         // Update allowance
         _approve(account, _msgSender(), decreasedAllowance);
 
         // Burn tokens
         _burn(account, amount);
+
     }
 }

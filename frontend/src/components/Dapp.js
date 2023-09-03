@@ -23,6 +23,7 @@ import { Medicals } from './Medicals';
 import { NewCharityModal } from './NewCharityModal';
 import { Charities } from './Charities';
 import { Donations } from './Donations';
+import { Items } from './Items';
 
 // This is the default id used by the Hardhat Network
 const HARDHAT_NETWORK_ID = '31337';
@@ -176,6 +177,11 @@ export class Dapp extends React.Component {
         <div className="row">
           <div className="col-12">
             <Donations />
+          </div>
+        </div>
+        <div className="row">
+          <div className="col-12">
+            <Items />
           </div>
         </div>
       </div>

@@ -19,7 +19,6 @@ contract ChainDonorMarketplace is Ownable {
     mapping(address => mapping(address => bool)) public removeCharityVotes; // To check if a charity has already voted to remove another charity
 
     Item[] public items; // List of items
-    uint256 public totalItems; // Total number of items
 
     // Structs
 
@@ -33,7 +32,7 @@ contract ChainDonorMarketplace is Ownable {
 
     struct Item {
         string name;
-        uint256 cost;
+        uint256 price;
         address charity;
         bool purchased;
         address purchasedBy;
@@ -69,10 +68,9 @@ contract ChainDonorMarketplace is Ownable {
         charityIndex[_charity] = charities.length - 1;
     }
 
-    function addItem(string memory _name, uint256 _cost) public onlyCharity {
-        items.push(Item(_name, _cost, _msgSender(), false, address(0)));
-        totalItems += 1;
-        emit ItemAdded(_name, _cost, _msgSender());
+    function addItem(string memory _name, uint256 _price) public onlyCharity {
+        items.push(Item(_name, _price, _msgSender(), false, address(0)));
+        emit ItemAdded(_name, _price, _msgSender());
     }
 
     function approveAddCharity(address _charity) public onlyCharity {
@@ -114,10 +112,10 @@ contract ChainDonorMarketplace is Ownable {
         require(_itemId < items.length, "ChainDonorMarketplace: Invalid item ID");
 
         Item storage item = items[_itemId];
-        require(token.balanceOf(_msgSender()) >= item.cost, "ChainDonorMarketplace: Insufficient BloodTokens");
+        require(token.balanceOf(_msgSender()) >= item.price, "ChainDonorMarketplace: Insufficient BloodTokens");
 
         // Burn tokens and mark item as purchased
-        token.burnFrom(_msgSender(), item.cost);
+        token.burnFrom(_msgSender(), item.price);
 
         item.purchased = true;
         item.purchasedBy = _msgSender();
@@ -127,5 +125,9 @@ contract ChainDonorMarketplace is Ownable {
 
     function totalCharities() public view returns (uint256) {
         return charities.length;
+    }
+
+    function totalItems() public view returns (uint256) {
+        return items.length;
     }
 }

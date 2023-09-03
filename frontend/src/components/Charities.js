@@ -2,11 +2,13 @@ import React, { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import ChainDonorMarketplaceArtifact from "../contracts/ChainDonorMarketplace.json";
 import contractAddress from "../resources/contract-address.json";
+import { NewItemModal } from "./NewItemModal";
 
 export const Charities = () => {
   const [charities, setCharities] = useState([]);
   const [charityCandidates, setCharityCandidates] = useState([]);
   const [approveError, setApproveError] = useState(null);
+  const [showNewItemModal, setShowNewItemModal] = useState(false);
 
   const provider = new ethers.providers.Web3Provider(window.ethereum);
   const contract = new ethers.Contract(
@@ -25,17 +27,21 @@ export const Charities = () => {
           data.push(charity);
         }
         setCharities(data.filter((ch) => ch.isApproved));
-        setCharityCandidates(
-          data.filter(
-            (ch) => !ch.isApproved
-          )
-        );
+        setCharityCandidates(data.filter((ch) => !ch.isApproved));
       } catch (error) {
         console.error("An error occurred while fetching data: ", error);
       }
     }
     fetchCharities();
   }, []);
+
+  const handleNewItemHide = () => {
+    setShowNewItemModal(false);
+  };
+
+  const handleNewItemShow = () => {
+    setShowNewItemModal(true);
+  };
 
   const handleApprove = async (wallet) => {
     setApproveError(null);
@@ -97,6 +103,14 @@ export const Charities = () => {
               ))}
             </tbody>
           </table>
+          <div className="row mb-5">
+            <div className="col-12">
+              <button className="btn btn-primary" onClick={handleNewItemShow}>
+                Add item
+              </button>
+            </div>
+          </div>
+          <NewItemModal show={showNewItemModal} onHide={handleNewItemHide} />
         </>
       )}
     </div>
