@@ -1,24 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { ethers } from "ethers";
-import ChainDonorHubArtifact from "../contracts/ChainDonorHub.json";
-import contractAddress from "../resources/contract-address.json";
+import useSmartContracts from "../hooks/useSmartContracts";
 
 export const Donors = () => {
   const [donors, setDonors] = useState([]);
-  const provider = new ethers.providers.Web3Provider(window.ethereum);
-  const contract = new ethers.Contract(
-    contractAddress.ChainDonorHub,
-    ChainDonorHubArtifact.abi,
-    provider.getSigner()
-  );
+  const { chainDonorHub } = useSmartContracts();
 
   useEffect(() => {
     async function fetchDonors() {
       try {
-        const count = await contract.totalDonors();
+        const count = await chainDonorHub.totalDonors();
         const data = [];
         for (let i = 0; i < count; i++) {
-          const donor = await contract.donors(i);
+          const donor = await chainDonorHub.donors(i);
           data.push(donor);
         }
         setDonors(data);
@@ -26,10 +19,12 @@ export const Donors = () => {
         console.error("An error occurred while fetching data: ", error);
       }
     }
-    fetchDonors();
-  }, []);
+    if (chainDonorHub) {
+      fetchDonors();
+    }
+  }, [chainDonorHub]);
 
-  if(donors.length === 0) return (<></>);
+  if (donors.length === 0) return <></>;
 
   return (
     <div>

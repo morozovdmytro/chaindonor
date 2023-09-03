@@ -1,25 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { ethers } from "ethers";
-import ChainDonorHubArtifact from "../contracts/ChainDonorHub.json";
-import contractAddress from "../resources/contract-address.json";
+import useIsMedicalInstitution from "../hooks/useIsMedicalInstitution";
+import useSmartContracts from "../hooks/useSmartContracts";
 
-export const Donations = () => {
+export const Donations = (selectedWallet) => {
   const [donations, setDonations] = useState([]);
   const [error, setError] = useState(null);
-  const provider = new ethers.providers.Web3Provider(window.ethereum);
-  const contract = new ethers.Contract(
-    contractAddress.ChainDonorHub,
-    ChainDonorHubArtifact.abi,
-    provider.getSigner()
-  );
+  const { chainDonorHub } = useSmartContracts();
 
   useEffect(() => {
     async function fetchDonations() {
       try {
-        const count = await contract.totalDonations();
+        const count = await chainDonorHub.totalDonations();
         const data = [];
         for (let i = 0; i < count; i++) {
-          const donor = await contract.donations(i);
+          const donor = await chainDonorHub.donations(i);
           data.push(donor);
         }
         setDonations(data);
@@ -27,13 +21,17 @@ export const Donations = () => {
         console.error("An error occurred while fetching data: ", error);
       }
     }
-    fetchDonations();
-  }, []);
+    if(chainDonorHub){
+      fetchDonations();
+    }
+  }, [chainDonorHub]);
+
+  const isMedical = useIsMedicalInstitution(selectedWallet);
 
   const handleDonationApprove = async (index) => {
     setError(null);
     try {
-      const tx = await contract.approveDonation(index);
+      const tx = await chainDonorHub.approveDonation(index);
       await tx.wait();
     } catch (error) {
       setError(error.error?.data?.message || error || "Unhandled error");
@@ -43,12 +41,16 @@ export const Donations = () => {
   const handleClaim = async (index) => {
     setError(null);
     try {
-      const tx = await contract.claimReward(index);
+      const tx = await chainDonorHub.claimReward(index);
       await tx.wait();
     } catch (error) {
       setError(error.error?.data?.message || error || "Unhandled error");
     }
   }
+  
+  const isDonator = (wallet) => {
+    return wallet.toLowerCase() === selectedWallet.toLowerCase();
+  };
 
   if (donations.length === 0) return <></>;
 
@@ -73,6 +75,7 @@ export const Donations = () => {
               <td>
                 {!donation.isApproved && (
                   <button
+                    disabled={!isDonator(donation.donor)}
                     className="btn btn-warning"
                     onClick={() => handleDonationApprove(index)}
                   >
@@ -82,6 +85,7 @@ export const Donations = () => {
                 {
                     donation.isApproved && !donation.claimed && (
                         <button
+                            disabled={!isMedical}
                             className="btn btn-success"
                             onClick={() => handleClaim(index)}
                         >

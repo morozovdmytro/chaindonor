@@ -1,27 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { ethers } from "ethers";
-import ChainDonorMarketplaceArtifact from "../contracts/ChainDonorMarketplace.json";
-import BloodTokenArtifact from "../contracts/BloodToken.json";
-import contractAddress from "../resources/contract-address.json";
+import useSmartContracts from "../hooks/useSmartContracts";
 
 export const Items = () => {
   const [items, setItems] = useState([]);
   const [error, setError] = useState(null);
-  const provider = new ethers.providers.Web3Provider(window.ethereum);
-  const contract = new ethers.Contract(
-    contractAddress.ChainDonorMarketplace,
-    ChainDonorMarketplaceArtifact.abi,
-    provider.getSigner()
-  );
-  const erc20Contract = new ethers.Contract(contractAddress.BloodToken, BloodTokenArtifact.abi, provider.getSigner());
+  const { chainDonorMarketplace, bloodToken } = useSmartContracts();
 
   useEffect(() => {
     async function fetchItems() {
       try {
-        const count = await contract.totalItems();
+        const count = await chainDonorMarketplace.totalItems();
         const data = [];
         for (let i = 0; i < count; i++) {
-          const item = await contract.items(i);
+          const item = await chainDonorMarketplace.items(i);
           data.push(item);
         }
         setItems(data);
@@ -29,15 +20,17 @@ export const Items = () => {
         console.error("An error occurred while fetching data: ", error);
       }
     }
-    fetchItems();
-  }, []);
+    if(chainDonorMarketplace){
+      fetchItems();
+    }
+  }, [chainDonorMarketplace]);
 
   const handlePurchase = async (index) => {
     setError(null);
     try {
-      const allowanceTx = await erc20Contract.approve(contract.address, items[index].price);
+      const allowanceTx = await bloodToken.approve(chainDonorMarketplace.address, items[index].price);
       await allowanceTx.wait();
-      const tx = await contract.purchaseItem(index);
+      const tx = await chainDonorMarketplace.purchaseItem(index);
       await tx.wait();
     } catch (error) {
       setError(error.error?.data?.message || error || "Unhandled error");

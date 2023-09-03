@@ -16,14 +16,12 @@ import { ConnectWallet } from "./ConnectWallet";
 import { Loading } from "./Loading";
 import { TransactionErrorMessage } from "./TransactionErrorMessage";
 import { WaitingForTransactionMessage } from "./WaitingForTransactionMessage";
-import { NewDonorModal } from "./NewDonorModal";
 import { Donors } from "./Donors";
-import { NewMedicalModal } from "./NewMedicalModal";
 import { Medicals } from './Medicals';
-import { NewCharityModal } from './NewCharityModal';
 import { Charities } from './Charities';
 import { Donations } from './Donations';
 import { Items } from './Items';
+import { Toolbar } from "./Toolbar";
 
 // This is the default id used by the Hardhat Network
 const HARDHAT_NETWORK_ID = '31337';
@@ -139,26 +137,8 @@ export class Dapp extends React.Component {
           </div>
         </div>
 
-        <div className="row">
-          <div className="col-4">
-            <button className="btn btn-primary" onClick={this.handleShowDonorModal}>
-              Register Donor
-            </button>
-          </div>
-          <div className="col-4">
-            <button className="btn btn-primary" onClick={this.handleShowMedicalModal}>
-              Register Medical
-            </button>
-          </div>
-          <div className="col-4">
-            <button className="btn btn-primary" onClick={this.handleShowCharityModal}>
-              Register Charity
-            </button>
-          </div>
-        </div>
-        <NewDonorModal show={this.state.showDonorModal} onHide={this.handleDonorModalClose} />
-        <NewMedicalModal show={this.state.showMedicalModal} onHide={this.handleMedicalModalClose} />
-        <NewCharityModal show={this.state.showCharityModal} onHide={this.handleCharityModalClose} />
+        <Toolbar wallet={this.state.selectedAddress} />
+
         <hr />
 
         <div className="row">
@@ -166,12 +146,12 @@ export class Dapp extends React.Component {
             <Donors />
           </div>
           <div className="col-12">
-            <Medicals />
+            <Medicals wallet={this.state.selectedAddress} />
           </div>
         </div>
         <div className="row">
           <div className="col-12">
-            <Charities />
+            <Charities wallet={this.state.selectedAddress} />
           </div>
         </div>
         <div className="row">
@@ -388,29 +368,5 @@ export class Dapp extends React.Component {
     if (window.ethereum.networkVersion !== HARDHAT_NETWORK_ID) {
       this._switchChain();
     }
-  }
-
-  handleShowDonorModal = () => {
-    this.setState({ showDonorModal: true });
-  }
-
-  handleDonorModalClose = () => {
-    this.setState({ showDonorModal: false });
-  };
-
-  handleShowMedicalModal = () => {
-    this.setState({ showMedicalModal: true });
-  }
-
-  handleMedicalModalClose = () => {
-    this.setState({ showMedicalModal: false });
-  };
-
-  handleShowCharityModal = () => {
-    this.setState({ showCharityModal: true });
-  }
-
-  handleCharityModalClose = () => {
-    this.setState({ showCharityModal: false });
   }
 }

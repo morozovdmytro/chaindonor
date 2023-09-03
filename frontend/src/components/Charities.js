@@ -1,29 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { ethers } from "ethers";
-import ChainDonorMarketplaceArtifact from "../contracts/ChainDonorMarketplace.json";
-import contractAddress from "../resources/contract-address.json";
 import { NewItemModal } from "./NewItemModal";
+import useIsCharity from "../hooks/useIsCharity";
+import useSmartContracts from "../hooks/useSmartContracts";
 
-export const Charities = () => {
+export const Charities = (selectedWallet) => {
   const [charities, setCharities] = useState([]);
   const [charityCandidates, setCharityCandidates] = useState([]);
   const [approveError, setApproveError] = useState(null);
   const [showNewItemModal, setShowNewItemModal] = useState(false);
-
-  const provider = new ethers.providers.Web3Provider(window.ethereum);
-  const contract = new ethers.Contract(
-    contractAddress.ChainDonorMarketplace,
-    ChainDonorMarketplaceArtifact.abi,
-    provider.getSigner()
-  );
+  const { chainDonorMarketplace } = useSmartContracts();
 
   useEffect(() => {
     async function fetchCharities() {
       try {
-        const count = await contract.totalCharities();
+        const count = await chainDonorMarketplace.totalCharities();
         const data = [];
         for (let i = 0; i < count; i++) {
-          const charity = await contract.charities(i);
+          const charity = await chainDonorMarketplace.charities(i);
           data.push(charity);
         }
         setCharities(data.filter((ch) => ch.isApproved));
@@ -32,8 +25,10 @@ export const Charities = () => {
         console.error("An error occurred while fetching data: ", error);
       }
     }
-    fetchCharities();
-  }, []);
+    if(chainDonorMarketplace){
+      fetchCharities();
+    }
+  }, [chainDonorMarketplace]);
 
   const handleNewItemHide = () => {
     setShowNewItemModal(false);
@@ -46,7 +41,7 @@ export const Charities = () => {
   const handleApprove = async (wallet) => {
     setApproveError(null);
     try {
-      const tx = await contract.approveAddCharity(wallet);
+      const tx = await chainDonorMarketplace.approveAddCharity(wallet);
       await tx.wait();
       setCharityCandidates(
         charityCandidates.filter((ch) => ch.wallet !== wallet)
@@ -56,6 +51,8 @@ export const Charities = () => {
       setApproveError(error.error?.data?.message || "Unhandled error");
     }
   };
+
+  const isCharity = useIsCharity(selectedWallet);
 
   return (
     <div>
@@ -103,13 +100,15 @@ export const Charities = () => {
               ))}
             </tbody>
           </table>
-          <div className="row mb-5">
-            <div className="col-12">
-              <button className="btn btn-primary" onClick={handleNewItemShow}>
-                Add item
-              </button>
+          {isCharity && (
+            <div className="row mb-5">
+              <div className="col-12">
+                <button className="btn btn-primary" onClick={handleNewItemShow}>
+                  Add item
+                </button>
+              </div>
             </div>
-          </div>
+          )}
           <NewItemModal show={showNewItemModal} onHide={handleNewItemHide} />
         </>
       )}

@@ -1,7 +1,5 @@
 import React, { useState } from "react";
-import { ethers } from "ethers";
-import ChainDonorHubArtifact from "../contracts/ChainDonorHub.json";
-import contractAddress from "../resources/contract-address.json";
+import useSmartContracts from "../hooks/useSmartContracts";
 
 export const NewDonationModal = ({ show, onHide }) => {
   const [error, setError] = useState(null);
@@ -9,6 +7,8 @@ export const NewDonationModal = ({ show, onHide }) => {
     donorWallet: "",
     amount: 0
   });
+
+  const { chainDonorHub } = useSmartContracts();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,13 +22,7 @@ export const NewDonationModal = ({ show, onHide }) => {
     setError(null);
     try {
       //TODO: save medical institution to database
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const donorHub = new ethers.Contract(
-        contractAddress.ChainDonorHub,
-        ChainDonorHubArtifact.abi,
-        provider.getSigner()
-      );
-      const tx = await donorHub.createDonation(donationInfo.donorWallet, donationInfo.amount);
+      const tx = await chainDonorHub.createDonation(donationInfo.donorWallet, donationInfo.amount);
       await tx.wait();
       handleClose();
     } catch (error) {
