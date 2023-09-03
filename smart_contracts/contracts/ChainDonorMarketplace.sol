@@ -7,7 +7,6 @@ import "./BloodToken.sol";
 contract ChainDonorMarketplace is Ownable {
     // State Variables
 
-    
     BloodToken public token; // ERC-20 token used for rewards
     Charity[] public charities; // List of registered charities
     mapping(address => bool) public isCharity; // Map of registered charities
