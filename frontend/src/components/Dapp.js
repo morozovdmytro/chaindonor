@@ -18,6 +18,8 @@ import { TransactionErrorMessage } from "./TransactionErrorMessage";
 import { WaitingForTransactionMessage } from "./WaitingForTransactionMessage";
 import { NewDonorModal } from "./NewDonorModal";
 import { Donors } from "./Donors";
+import { NewMedicalModal } from "./NewMedicalModal";
+import { Medicals } from './Medicals';
 
 // This is the default id used by the Hardhat Network
 const HARDHAT_NETWORK_ID = '31337';
@@ -51,7 +53,8 @@ export class Dapp extends React.Component {
       txBeingSent: undefined,
       transactionError: undefined,
       networkError: undefined,
-      showDonorModal: false
+      showDonorModal: false,
+      showMedicalModal: false
     };
 
     this.state = this.initialState;
@@ -132,23 +135,30 @@ export class Dapp extends React.Component {
         </div>
 
         <div className="row">
-          <div className="col-12">
-          <button className="btn btn-primary" onClick={this.handleShowDonorModal}>
-            Register Donor
-          </button>
+          <div className="col-4">
+            <button className="btn btn-primary" onClick={this.handleShowDonorModal}>
+              Register Donor
+            </button>
+          </div>
+          <div className="col-4">
+            <button className="btn btn-primary" onClick={this.handleShowMedicalModal}>
+              Register Medical
+            </button>
           </div>
         </div>
-        <NewDonorModal show={this.state.showDonorModal} onHide={this.handleDonorModelClose} />
+        <NewDonorModal show={this.state.showDonorModal} onHide={this.handleDonorModalClose} />
+        <NewMedicalModal show={this.state.showMedicalModal} onHide={this.handleMedicalModalClose} />
 
         <hr />
 
         <div className="row">
-          <div className="col-4">
+          <div className="col-md-6">
             <Donors />
           </div>
-          <div className="col-4">
+          <div className="col-md-6">
+            <Medicals />
           </div>
-          <div className="col-4">
+          <div className="col-md-6">
           </div>
         </div>
       </div>
@@ -361,7 +371,15 @@ export class Dapp extends React.Component {
     this.setState({ showDonorModal: true });
   }
 
-  handleDonorModelClose = () => {
+  handleDonorModalClose = () => {
     this.setState({ showDonorModal: false });
+  };
+
+  handleShowMedicalModal = () => {
+    this.setState({ showMedicalModal: true });
+  }
+
+  handleMedicalModalClose = () => {
+    this.setState({ showMedicalModal: false });
   };
 }

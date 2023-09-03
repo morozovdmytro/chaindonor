@@ -8,8 +8,12 @@ contract ChainDonorHub is Ownable {
     // State variables
 
     BloodToken public token; // ERC-20 token used for rewards
-    // institution => bool
-    mapping(address => bool) public medicalInstitutions; // map of registered medical institutions
+    MedicalInstitution[] public medicalInstitutions; // list of registered medical institutions
+    // medical wallet => medical index
+    mapping(address => uint256) private medicalInstitutionIndex; // map of donor indexes
+    // medical wallet => bool
+    mapping(address => bool) public isMedicalInstitution; // map of registered medical institutions
+    uint256 public totalInstitutions = 0; // To calculate the 51% consensus
     // donor wallet => donation index => Donation
     mapping(address => Donation[]) public donorDonations; // map of donations per donor
     // donors
@@ -18,11 +22,15 @@ contract ChainDonorHub is Ownable {
     mapping(address => uint256) private donorIndex; // map of donor indexes
     // donor wallet => bool
     mapping(address => bool) public isDonor; // map of donors
-    uint256 public totalInstitutions = 0; // To calculate the 51% consensus
     // donor wallet => donation index => institution wallet => bool
     mapping(address => mapping(uint256 => mapping(address => bool))) approvedBy; // To check if an institution has already approved a donation; 
 
     // Structs
+
+    struct MedicalInstitution {
+        address wallet; // Wallet address
+        bool isDeleted; // Whether the institution has been deleted
+    }
 
     struct Donation {
         uint256 amount; // Amount of tokens donated
@@ -48,7 +56,7 @@ contract ChainDonorHub is Ownable {
 
     // Only medical institutions can perform this action
     modifier onlyMedicalInstitution() {
-        require(medicalInstitutions[_msgSender()] == true, "ChainDonorHub: Sender is not a medical institution");
+        require(isMedicalInstitution[_msgSender()] == true, "ChainDonorHub: Sender is not a medical institution");
         _;
     }
 
@@ -65,15 +73,22 @@ contract ChainDonorHub is Ownable {
 
     // Register medical institutions
     function addMedicalInstitution(address _institution) public onlyOwner {
-        medicalInstitutions[_institution] = true;
+        require(!isMedicalInstitution[_institution], "ChainDonorHub: Institution already registered");
+        medicalInstitutions.push(MedicalInstitution({
+            wallet: _institution,
+            isDeleted: false
+        }));
+        isMedicalInstitution[_institution] = true;
+        medicalInstitutionIndex[_institution] = medicalInstitutions.length - 1;
         totalInstitutions += 1;
         emit InstitutionAdded(_institution);
     }
 
     // Remove medical institutions
     function removeMedicalInstitution(address _institution) public onlyOwner {
-        medicalInstitutions[_institution] = false;
+        isMedicalInstitution[_institution] = false;
         totalInstitutions -= 1;
+        medicalInstitutions[medicalInstitutionIndex[_institution]].isDeleted = true;
         emit InstitutionRemoved(_institution);
     }
 
