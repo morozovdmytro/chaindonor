@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import useSmartContracts from "../hooks/useSmartContracts";
+import { iterateOverData } from "../helpers/utils";
 
 export const Items = () => {
   const [items, setItems] = useState([]);
@@ -9,12 +10,7 @@ export const Items = () => {
   useEffect(() => {
     async function fetchItems() {
       try {
-        const count = await chainDonorMarketplace.totalItems();
-        const data = [];
-        for (let i = 0; i < count; i++) {
-          const item = await chainDonorMarketplace.items(i);
-          data.push(item);
-        }
+        const data = await iterateOverData(chainDonorMarketplace.totalItems, chainDonorMarketplace.items);
         setItems(data);
       } catch (error) {
         console.error("An error occurred while fetching data: ", error);

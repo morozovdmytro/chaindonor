@@ -63,6 +63,8 @@ export class Dapp extends React.Component {
     this.state = this.initialState;
   }
 
+  
+
   render() {
     // Ethereum wallets inject the window.ethereum object. If it hasn't been
     // injected, we instruct the user to install a wallet.

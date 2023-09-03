@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import useIsMedicalInstitution from "../hooks/useIsMedicalInstitution";
 import useSmartContracts from "../hooks/useSmartContracts";
+import { iterateOverData } from "../helpers/utils";
 
 export const Donations = (selectedWallet) => {
   const [donations, setDonations] = useState([]);
@@ -10,12 +11,7 @@ export const Donations = (selectedWallet) => {
   useEffect(() => {
     async function fetchDonations() {
       try {
-        const count = await chainDonorHub.totalDonations();
-        const data = [];
-        for (let i = 0; i < count; i++) {
-          const donor = await chainDonorHub.donations(i);
-          data.push(donor);
-        }
+        const data = await iterateOverData(chainDonorHub.totalDonations, chainDonorHub.donations);
         setDonations(data);
       } catch (error) {
         console.error("An error occurred while fetching data: ", error);

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { NewItemModal } from "./NewItemModal";
 import useIsCharity from "../hooks/useIsCharity";
 import useSmartContracts from "../hooks/useSmartContracts";
+import { iterateOverData } from "../helpers/utils";
 
 export const Charities = (selectedWallet) => {
   const [charities, setCharities] = useState([]);
@@ -13,12 +14,7 @@ export const Charities = (selectedWallet) => {
   useEffect(() => {
     async function fetchCharities() {
       try {
-        const count = await chainDonorMarketplace.totalCharities();
-        const data = [];
-        for (let i = 0; i < count; i++) {
-          const charity = await chainDonorMarketplace.charities(i);
-          data.push(charity);
-        }
+        const data = await iterateOverData(chainDonorMarketplace.totalCharities, chainDonorMarketplace.charities);
         setCharities(data.filter((ch) => ch.isApproved));
         setCharityCandidates(data.filter((ch) => !ch.isApproved));
       } catch (error) {
