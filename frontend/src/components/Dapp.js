@@ -17,6 +17,7 @@ import { Loading } from "./Loading";
 import { TransactionErrorMessage } from "./TransactionErrorMessage";
 import { WaitingForTransactionMessage } from "./WaitingForTransactionMessage";
 import { NewDonorModal } from "./NewDonorModal";
+import { Donors } from "./Donors";
 
 // This is the default id used by the Hardhat Network
 const HARDHAT_NETWORK_ID = '31337';
@@ -138,6 +139,18 @@ export class Dapp extends React.Component {
           </div>
         </div>
         <NewDonorModal show={this.state.showDonorModal} onHide={this.handleDonorModelClose} />
+
+        <hr />
+
+        <div className="row">
+          <div className="col-4">
+            <Donors />
+          </div>
+          <div className="col-4">
+          </div>
+          <div className="col-4">
+          </div>
+        </div>
       </div>
     );
   }
@@ -238,6 +251,7 @@ export class Dapp extends React.Component {
   }
 
   async _updateBalance() {
+    if(!this.state.selectedAddress?.length) return;
     const balance = await this._token.balanceOf(this.state.selectedAddress);
     this.setState({ balance });
   }

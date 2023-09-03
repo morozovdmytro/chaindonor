@@ -1,4 +1,8 @@
 import React, { useState } from "react";
+import { ethers } from "ethers";
+import ChainDonorHubArtifact from "../contracts/ChainDonorHub.json";
+import contractAddress from "../resources/contract-address.json";
+import sha256 from 'crypto-js/sha256';
 
 export const NewDonorModal = ({ show, onHide }) => {
 
@@ -16,15 +20,28 @@ export const NewDonorModal = ({ show, onHide }) => {
     });
   };
 
-  const handleSubmit = () => {
-    console.log("Donor Information Submitted", donorInfo);
-    // Do something with donorInfo, like sending it to a server or smart contract
+  const handleSubmit = async () => {
+    //TODO: save donorInfo to database
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const donorHub = new ethers.Contract(
+      contractAddress.ChainDonorHub,
+      ChainDonorHubArtifact.abi,
+      provider.getSigner()
+    );
+    const donorInfoHash = ethers.utils.arrayify("0x" + hashDonorInfo(donorInfo));
+    const tx = await donorHub.registerDonor(donorInfoHash);
+    await tx.wait();
     handleClose();
   };
 
   const handleClose = () => {
     onHide();
   };
+
+  const hashDonorInfo = (donorInfo) => {
+    const hash = sha256(JSON.stringify(donorInfo));
+    return hash.toString();
+  }
 
   return (
     <>

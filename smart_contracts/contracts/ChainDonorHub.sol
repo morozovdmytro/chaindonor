@@ -10,14 +10,16 @@ contract ChainDonorHub is Ownable {
     BloodToken public token; // ERC-20 token used for rewards
     // institution => bool
     mapping(address => bool) public medicalInstitutions; // map of registered medical institutions
-    // donor => bool
-    mapping(address => bool) public donors; // map of registered donors
-    // donor => donation index => Donation
+    // donor wallet => donation index => Donation
     mapping(address => Donation[]) public donorDonations; // map of donations per donor
-    // donor => hashed personal information
-    mapping(address => bytes32) public donorPersonalInfo; // map of hashed personal information per donor
+    // donors
+    Donor[] public donors; // list of donors
+    // donor wallet => donor index
+    mapping(address => uint256) private donorIndex; // map of donor indexes
+    // donor wallet => bool
+    mapping(address => bool) public isDonor; // map of donors
     uint256 public totalInstitutions = 0; // To calculate the 51% consensus
-    // donor => donation index => institution => bool
+    // donor wallet => donation index => institution wallet => bool
     mapping(address => mapping(uint256 => mapping(address => bool))) approvedBy; // To check if an institution has already approved a donation; 
 
     // Structs
@@ -26,6 +28,12 @@ contract ChainDonorHub is Ownable {
         uint256 amount; // Amount of tokens donated
         uint256 approvals; // Number of approvals
         bool claimed; // Whether the reward has been claimed
+    }
+
+    struct Donor {
+        bytes32 hashPersonalInfo; // Hashed personal information
+        address wallet; // Wallet address
+        bool isDeleted; // Whether the donor has been deleted
     }
 
     // Events
@@ -45,7 +53,7 @@ contract ChainDonorHub is Ownable {
     }
 
     modifier onlyDonor() {
-        require(donors[_msgSender()] == true, "ChainDonorHub: Sender is not a donor");
+        require(isDonor[_msgSender()] == true, "ChainDonorHub: Sender is not a donor");
         _;
     }
 
@@ -71,21 +79,28 @@ contract ChainDonorHub is Ownable {
 
     // Register donors
     function registerDonor(bytes32 _hashPersonalInfo) public {
-        require(donors[_msgSender()] == false, "ChainDonorHub: Donor already registered");
-        donors[_msgSender()] = true;
-        donorPersonalInfo[_msgSender()] = _hashPersonalInfo;
+        require(!isDonor[_msgSender()], "ChainDonorHub: Donor already registered");
+        Donor memory donor = Donor({
+            hashPersonalInfo: _hashPersonalInfo,
+            wallet: _msgSender(),
+            isDeleted: false
+        });
+        donors.push(donor);
+        donorIndex[_msgSender()] = donors.length - 1;
+        isDonor[_msgSender()] = true;
     }
 
     // Remove donors
     function removeDonor() public {
-        require(donors[_msgSender()] == true, "ChainDonorHub: Donor not registered");
-        donors[_msgSender()] = false;
-        donorPersonalInfo[_msgSender()] = "";
+        require(donors[donorIndex[_msgSender()]].wallet != address(0), "ChainDonorHub: Donor not registered");
+        require(donors[donorIndex[_msgSender()]].isDeleted == false, "ChainDonorHub: Donor already deleted");
+        donors[donorIndex[_msgSender()]].isDeleted = true;
+        isDonor[_msgSender()] = false;
     }
 
     // Create a new donation
     function createDonation(address _donor, uint256 _amount) public onlyMedicalInstitution {
-        require(donors[_donor] == true, "ChainDonorHub: Donor not registered");
+        require(donors[donorIndex[_donor]].wallet != address(0), "ChainDonorHub: Donor not registered");
         require(_amount > 0, "ChainDonorHub: Amount must be greater than 0");
         
         Donation memory newDonation = Donation({
@@ -131,5 +146,9 @@ contract ChainDonorHub is Ownable {
         donorDonations[_msgSender()][_index].claimed = true;
 
         emit DonationClaimed(_msgSender(), amount);
+    }
+
+    function getDonorCount() public view returns(uint256) {
+        return donors.length;
     }
 }
