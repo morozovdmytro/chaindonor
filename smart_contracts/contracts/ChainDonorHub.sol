@@ -8,22 +8,26 @@ contract ChainDonorHub is Ownable {
     // State variables
 
     BloodToken public token; // ERC-20 token used for rewards
+    
     MedicalInstitution[] public medicalInstitutions; // list of registered medical institutions
     // medical wallet => medical index
     mapping(address => uint256) private medicalInstitutionIndex; // map of donor indexes
     // medical wallet => bool
     mapping(address => bool) public isMedicalInstitution; // map of registered medical institutions
     uint256 public totalInstitutions = 0; // To calculate the 51% consensus
-    // donor wallet => donation index => Donation
-    mapping(address => Donation[]) public donorDonations; // map of donations per donor
+    
     // donors
     Donor[] public donors; // list of donors
     // donor wallet => donor index
     mapping(address => uint256) private donorIndex; // map of donor indexes
     // donor wallet => bool
     mapping(address => bool) public isDonor; // map of donors
-    // donor wallet => donation index => institution wallet => bool
-    mapping(address => mapping(uint256 => mapping(address => bool))) approvedBy; // To check if an institution has already approved a donation; 
+
+     // donor wallet => donation index => Donation
+    mapping(address => uint256[]) public donorDonations; // map of donations per donor
+    Donation[] public donations; // list of donations
+    // donation index => institution wallet => bool
+    mapping(uint256 => mapping(address => bool)) approvedBy; // To check if an institution has already approved a donation; 
 
     // Structs
 
@@ -33,9 +37,11 @@ contract ChainDonorHub is Ownable {
     }
 
     struct Donation {
+        address donor; // donor wallet address
         uint256 amount; // Amount of tokens donated
         uint256 approvals; // Number of approvals
         bool claimed; // Whether the reward has been claimed
+        bool isApproved; // Whether the donation has been approved
     }
 
     struct Donor {
@@ -87,7 +93,6 @@ contract ChainDonorHub is Ownable {
     // Remove medical institutions
     function removeMedicalInstitution(address _institution) public onlyOwner {
         isMedicalInstitution[_institution] = false;
-        totalInstitutions -= 1;
         medicalInstitutions[medicalInstitutionIndex[_institution]].isDeleted = true;
         emit InstitutionRemoved(_institution);
     }
@@ -115,55 +120,67 @@ contract ChainDonorHub is Ownable {
 
     // Create a new donation
     function createDonation(address _donor, uint256 _amount) public onlyMedicalInstitution {
-        require(donors[donorIndex[_donor]].wallet != address(0), "ChainDonorHub: Donor not registered");
+        require(isDonor[_donor], "ChainDonorHub: Donor not registered");
         require(_amount > 0, "ChainDonorHub: Amount must be greater than 0");
         
         Donation memory newDonation = Donation({
             amount: _amount,
             approvals: 0,
-            claimed: false
+            claimed: false,
+            donor: _donor,
+            isApproved: false
         });
 
         // add donation
-        donorDonations[_donor].push(newDonation);
+        donations.push(newDonation);
+        donorDonations[_donor].push(donations.length - 1);
 
         emit DonationCreated(_donor, _amount);
     }
 
     // Approve a donation
-    function approveDonation(address _donor, uint256 _index) public onlyMedicalInstitution {
+    function approveDonation(uint256 _index) public onlyMedicalInstitution {
         // check if donation was not approved yet
-        require(!approvedBy[_donor][_index][_msgSender()], "ChainDonorHub: Institution has already approved this donation");
+        require(!approvedBy[_index][_msgSender()], "ChainDonorHub: Institution has already approved this donation");
         
         // check if donation exists
-        require(donorDonations[_donor][_index].amount > 0, "ChainDonorHub: Donation does not exist");
+        require(_index < donations.length, "ChainDonorHub: Donation does not exist");
 
         // increment approvals
-        donorDonations[_donor][_index].approvals += 1;
-        approvedBy[_donor][_index][_msgSender()] = true;
+        donations[_index].approvals += 1;
+        approvedBy[_index][_msgSender()] = true;
 
-        emit DonationApproved(_msgSender(), _donor, _index);
+        // check if donation was approved by at least 51 of insitutions
+        if (donations[_index].approvals * 2 > totalInstitutions) {
+            donations[_index].isApproved = true;
+        }
+
+        emit DonationApproved(_msgSender(), donations[_index].donor, _index);
     }
 
     // Claim a reward
     function claimReward(uint256 _index) public onlyDonor {
         // check if donation was approved by at least 51 of insitutions
-        require(donorDonations[_msgSender()][_index].approvals * 2 > totalInstitutions, "ChainDonorHub: Not enough approvals");
+        require(donations[_index].isApproved, "ChainDonorHub: Not enough approvals");
         // check if reward was not claimed yet
-        require(!donorDonations[_msgSender()][_index].claimed, "ChainDonorHub: Already claimed");
+        require(!donations[_index].claimed, "ChainDonorHub: Already claimed");
 
-        uint256 amount = donorDonations[_msgSender()][_index].amount;
+        uint256 amount = donations[_index].amount;
 
         // transfer tokens to donor
         token.mint(_msgSender(), amount);
 
         // mark reward as claimed
-        donorDonations[_msgSender()][_index].claimed = true;
+        donations[_index].claimed = true;
 
         emit DonationClaimed(_msgSender(), amount);
     }
 
-    function getDonorCount() public view returns(uint256) {
+    function totalDonors() public view returns(uint256) {
         return donors.length;
+    }
+
+    function totalDonations() public view returns(uint256) {
+        return donations.length;
     }
 }

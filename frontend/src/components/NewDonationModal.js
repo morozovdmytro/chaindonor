@@ -2,53 +2,42 @@ import React, { useState } from "react";
 import { ethers } from "ethers";
 import ChainDonorHubArtifact from "../contracts/ChainDonorHub.json";
 import contractAddress from "../resources/contract-address.json";
-import sha256 from "crypto-js/sha256";
 
-export const NewDonorModal = ({ show, onHide }) => {
+export const NewDonationModal = ({ show, onHide }) => {
   const [error, setError] = useState(null);
-
-  const [donorInfo, setDonorInfo] = useState({
-    name: "",
-    email: "",
-    bloodType: "",
+  const [donationInfo, setDonationInfo] = useState({
+    donorWallet: "",
+    amount: 0
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setDonorInfo({
-      ...donorInfo,
+    setDonationInfo({
+      ...donationInfo,
       [name]: value,
     });
   };
 
   const handleSubmit = async () => {
-    //TODO: save donorInfo to database
     setError(null);
     try {
+      //TODO: save medical institution to database
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const donorHub = new ethers.Contract(
         contractAddress.ChainDonorHub,
         ChainDonorHubArtifact.abi,
         provider.getSigner()
       );
-      const donorInfoHash = ethers.utils.arrayify(
-        "0x" + hashDonorInfo(donorInfo)
-      );
-      const tx = await donorHub.registerDonor(donorInfoHash);
+      const tx = await donorHub.createDonation(donationInfo.donorWallet, donationInfo.amount);
       await tx.wait();
       handleClose();
     } catch (error) {
-      setError(error.error?.data?.message || 'Unhandled error');
+      setError(error.error?.data?.message || "Unhandled error");
     }
   };
 
   const handleClose = () => {
     onHide();
-  };
-
-  const hashDonorInfo = (donorInfo) => {
-    const hash = sha256(JSON.stringify(donorInfo));
-    return hash.toString();
   };
 
   return (
@@ -60,7 +49,7 @@ export const NewDonorModal = ({ show, onHide }) => {
         <div className="modal-dialog">
           <div className="modal-content">
             <div className="modal-header">
-              <h5 className="modal-title">Register Donor</h5>
+              <h5 className="modal-title">New donation</h5>
               <button
                 type="button"
                 className="close"
@@ -83,52 +72,30 @@ export const NewDonorModal = ({ show, onHide }) => {
               </div>
               <form>
                 <div className="mb-3">
-                  <label htmlFor="name" className="form-label">
-                    Name
+                  <label htmlFor="donorWallet" className="form-label">
+                    Donor Wallet
                   </label>
                   <input
                     type="text"
                     className="form-control"
-                    id="name"
-                    name="name"
-                    value={donorInfo.name}
+                    id="donorWallet"
+                    name="donorWallet"
+                    value={donationInfo.donorWallet}
                     onChange={handleChange}
                   />
                 </div>
                 <div className="mb-3">
-                  <label htmlFor="email" className="form-label">
-                    Email
+                  <label htmlFor="amount" className="form-label">
+                    Blood amount
                   </label>
                   <input
-                    type="email"
+                    type="number"
                     className="form-control"
-                    id="email"
-                    name="email"
-                    value={donorInfo.email}
+                    id="amount"
+                    name="amount"
+                    value={donationInfo.amount}
                     onChange={handleChange}
                   />
-                </div>
-                <div className="mb-3">
-                  <label htmlFor="bloodType" className="form-label">
-                    Blood Type
-                  </label>
-                  <select
-                    className="custom-select"
-                    id="bloodType"
-                    name="bloodType"
-                    value={donorInfo.bloodType}
-                    onChange={handleChange}
-                  >
-                    <option>Select Blood Type</option>
-                    <option value="A+">A+</option>
-                    <option value="A-">A-</option>
-                    <option value="B+">B+</option>
-                    <option value="B-">B-</option>
-                    <option value="AB+">AB+</option>
-                    <option value="AB-">AB-</option>
-                    <option value="O+">O+</option>
-                    <option value="O-">O-</option>
-                  </select>
                 </div>
               </form>
             </div>
@@ -157,4 +124,4 @@ export const NewDonorModal = ({ show, onHide }) => {
   );
 };
 
-export default NewDonorModal;
+export default NewDonationModal;

@@ -9,13 +9,13 @@ export const Donors = () => {
   const contract = new ethers.Contract(
     contractAddress.ChainDonorHub,
     ChainDonorHubArtifact.abi,
-    provider
+    provider.getSigner()
   );
 
   useEffect(() => {
     async function fetchDonors() {
       try {
-        const count = await contract.getDonorCount();
+        const count = await contract.totalDonors();
         const data = [];
         for (let i = 0; i < count; i++) {
           const donor = await contract.donors(i);

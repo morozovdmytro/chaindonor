@@ -20,6 +20,9 @@ import { NewDonorModal } from "./NewDonorModal";
 import { Donors } from "./Donors";
 import { NewMedicalModal } from "./NewMedicalModal";
 import { Medicals } from './Medicals';
+import { NewCharityModal } from './NewCharityModal';
+import { Charities } from './Charities';
+import { Donations } from './Donations';
 
 // This is the default id used by the Hardhat Network
 const HARDHAT_NETWORK_ID = '31337';
@@ -54,7 +57,8 @@ export class Dapp extends React.Component {
       transactionError: undefined,
       networkError: undefined,
       showDonorModal: false,
-      showMedicalModal: false
+      showMedicalModal: false,
+      showCharityModal: false,
     };
 
     this.state = this.initialState;
@@ -145,20 +149,33 @@ export class Dapp extends React.Component {
               Register Medical
             </button>
           </div>
+          <div className="col-4">
+            <button className="btn btn-primary" onClick={this.handleShowCharityModal}>
+              Register Charity
+            </button>
+          </div>
         </div>
         <NewDonorModal show={this.state.showDonorModal} onHide={this.handleDonorModalClose} />
         <NewMedicalModal show={this.state.showMedicalModal} onHide={this.handleMedicalModalClose} />
-
+        <NewCharityModal show={this.state.showCharityModal} onHide={this.handleCharityModalClose} />
         <hr />
 
         <div className="row">
-          <div className="col-md-6">
+          <div className="col-12">
             <Donors />
           </div>
-          <div className="col-md-6">
+          <div className="col-12">
             <Medicals />
           </div>
-          <div className="col-md-6">
+        </div>
+        <div className="row">
+          <div className="col-12">
+            <Charities />
+          </div>
+        </div>
+        <div className="row">
+          <div className="col-12">
+            <Donations />
           </div>
         </div>
       </div>
@@ -382,4 +399,12 @@ export class Dapp extends React.Component {
   handleMedicalModalClose = () => {
     this.setState({ showMedicalModal: false });
   };
+
+  handleShowCharityModal = () => {
+    this.setState({ showCharityModal: true });
+  }
+
+  handleCharityModalClose = () => {
+    this.setState({ showCharityModal: false });
+  }
 }

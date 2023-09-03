@@ -16,6 +16,8 @@ async function main() {
   const DonorApp = await ethers.getContractFactory("ChainDonorHub");
   const donorApp = await DonorApp.deploy(bloodTokenAddress); // Assuming the DonorApp takes the BloodToken address as a constructor argument
   console.log(`DonorApp deployed at: ${await donorApp.getAddress()}`);
+  await bloodToken.setMinter(await donorApp.getAddress()); // Set the DonorApp as the minter of the BloodToken
+  console.log(`DonorApp set as minter of BloodToken`);
 
   // Deploy Marketplace
   const Marketplace = await ethers.getContractFactory("ChainDonorMarketplace");
